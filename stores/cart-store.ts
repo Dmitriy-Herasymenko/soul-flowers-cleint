@@ -64,6 +64,7 @@ export const useCartStore = create<CartStore>()(
       clearCart: () => {
         set({ items: [] });
       },
+      
 
       toggleCart: () => {
         set((state) => ({ isOpen: !state.isOpen }));
