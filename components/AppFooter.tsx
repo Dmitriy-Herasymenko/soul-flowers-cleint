@@ -1,15 +1,4 @@
-'use client';
-
-import { usePathname } from 'next/navigation';
-
 export function AppFooter() {
-  const pathname = usePathname();
-  
-  // Не показувати футер на dashboard сторінках
-  if (pathname.startsWith('/dashboard')) {
-    return null;
-  }
-  
   return (
     <footer className="bg-gray-900 text-gray-300 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

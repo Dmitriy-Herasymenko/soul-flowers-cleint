@@ -1,19 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/stores/auth-store';
 import { useRouter } from 'next/navigation';
 import { BarChart3, ShoppingCart, Users, Package } from 'lucide-react';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { isOwner, isAdmin, isCustomer, checkAuth, user } = useAuthStore();
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  useEffect(() => {
-    checkAuth();
-    setIsLoaded(true);
-  }, []);
+  const { isOwner, isAdmin, isCustomer, user } = useAuthStore();
 
   const stats = [
     { name: 'Замовлення', value: '0', icon: Package, color: 'bg-blue-500' },
@@ -24,17 +17,6 @@ export default function DashboardPage() {
     stats.push(
       { name: 'Користувачі', value: '0', icon: Users, color: 'bg-purple-500' },
       { name: 'Дохід', value: '₴0', icon: BarChart3, color: 'bg-pink-500' }
-    );
-  }
-
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-pink-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Завантаження...</p>
-        </div>
-      </div>
     );
   }
 
@@ -78,7 +60,7 @@ export default function DashboardPage() {
             <h3 className="font-medium text-gray-900">Каталог квітів</h3>
             <p className="text-sm text-gray-600 mt-1">Переглянути всі товари</p>
           </button>
-          
+
           {isOwner && (
             <button
               onClick={() => router.push('/dashboard/users')}
@@ -88,7 +70,7 @@ export default function DashboardPage() {
               <p className="text-sm text-gray-600 mt-1">Управління користувачами</p>
             </button>
           )}
-          
+
           {isAdmin && (
             <button
               onClick={() => router.push('/dashboard/products')}

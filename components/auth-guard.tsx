@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
 
@@ -12,22 +12,20 @@ interface AuthGuardProps {
 export function AuthGuard({ children, requiredRole }: AuthGuardProps) {
   const router = useRouter();
   const { isAuthenticated, checkAuth, isOwner, isAdmin, isCustomer } = useAuthStore();
-  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     checkAuth();
-    setIsLoaded(true);
   }, []);
 
   useEffect(() => {
-    if (isLoaded && !isAuthenticated) {
+    if (!isAuthenticated) {
       router.push('/auth/login');
     }
-  }, [isAuthenticated, isLoaded, router]);
+  }, [isAuthenticated, router]);
 
   // Перевірка ролі
   useEffect(() => {
-    if (isLoaded && isAuthenticated && requiredRole) {
+    if (isAuthenticated && requiredRole) {
       const hasRole =
         (requiredRole === 'owner' && isOwner) ||
         (requiredRole === 'admin' && isAdmin) ||
@@ -37,9 +35,9 @@ export function AuthGuard({ children, requiredRole }: AuthGuardProps) {
         router.push('/dashboard');
       }
     }
-  }, [isAuthenticated, isLoaded, requiredRole, isOwner, isAdmin, isCustomer, router]);
+  }, [isAuthenticated, requiredRole, isOwner, isAdmin, isCustomer, router]);
 
-  if (!isLoaded) {
+  if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-white via-pink-50/30 to-white">
         <div className="text-center">
@@ -48,10 +46,6 @@ export function AuthGuard({ children, requiredRole }: AuthGuardProps) {
         </div>
       </div>
     );
-  }
-
-  if (!isAuthenticated) {
-    return null;
   }
 
   if (requiredRole) {
