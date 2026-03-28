@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ProductCard } from '@/components/ProductCard';
 import { Pagination } from '@/components/Pagination';
@@ -26,6 +27,31 @@ export function ProductsGrid({ products, pagination }: ProductsGridProps) {
     params.set('page', '1'); // Скидаємо на першу сторінку при зміні сортування
     router.push(`${pathname}?${params.toString()}`);
   };
+
+  // Сортування на клієнті
+  const sortedProducts = useMemo(() => {
+    if (!currentSort) return products;
+
+    const sorted = [...products];
+    switch (currentSort) {
+      case 'price_asc':
+        return sorted.sort((a, b) => {
+          const priceA = parseFloat(a.salePrice || a.price);
+          const priceB = parseFloat(b.salePrice || b.price);
+          return priceA - priceB;
+        });
+      case 'price_desc':
+        return sorted.sort((a, b) => {
+          const priceA = parseFloat(a.salePrice || a.price);
+          const priceB = parseFloat(b.salePrice || b.price);
+          return priceB - priceA;
+        });
+      case 'sale':
+        return sorted.filter((p) => p.salePrice && p.salePrice !== p.price);
+      default:
+        return sorted;
+    }
+  }, [products, currentSort]);
 
   return (
     <>
@@ -88,7 +114,7 @@ export function ProductsGrid({ products, pagination }: ProductsGridProps) {
 
       {/* Products Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-        {products.map((product) => (
+        {sortedProducts.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
       </div>
