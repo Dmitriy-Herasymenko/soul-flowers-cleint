@@ -1,15 +1,18 @@
+import { apiRequest, setToken, setUser, doLogout } from './api-interceptor';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://soul-flowers-api.vercel.app/api';
 
-// Token interceptor - додає токен до всіх запитів
-function getAuthHeaders(): HeadersInit {
-  if (typeof window === 'undefined') return {};
-  
-  const token = localStorage.getItem('auth_token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
+interface AuthResponse {
+  user: {
+    id: string;
+    email: string;
+    roles: string[];
+  };
+  accessToken: string;
 }
 
 // Auth endpoints
-export async function login(email: string, password: string) {
+export async function login(email: string, password: string): Promise<AuthResponse> {
   const response = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -22,16 +25,14 @@ export async function login(email: string, password: string) {
     throw new Error(data.message || 'Помилка входу');
   }
   
-  // Зберігаємо токен в localStorage
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('auth_token', data.data.accessToken);
-    localStorage.setItem('auth_user', JSON.stringify(data.data.user));
-  }
+  // Зберігаємо токен і користувача
+  setToken(data.data.accessToken);
+  setUser(data.data.user);
   
   return data.data;
 }
 
-export async function register(name: string, email: string, password: string) {
+export async function register(name: string, email: string, password: string): Promise<AuthResponse> {
   const response = await fetch(`${API_URL}/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -44,43 +45,29 @@ export async function register(name: string, email: string, password: string) {
     throw new Error(data.message || 'Помилка реєстрації');
   }
   
-  // Зберігаємо токен в localStorage
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('auth_token', data.data.accessToken);
-    localStorage.setItem('auth_user', JSON.stringify(data.data.user));
-  }
+  // Зберігаємо токен і користувача
+  setToken(data.data.accessToken);
+  setUser(data.data.user);
   
   return data.data;
 }
 
 export async function logout() {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('auth_user');
+  try {
+    // Спробуємо викликати logout endpoint
+    await apiRequest('/auth/logout', { method: 'POST' });
+  } catch {
+    // Ігноруємо помилки logout
+  } finally {
+    doLogout();
   }
 }
 
 export async function getCurrentUser() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-  
-  if (!token) return null;
-  
   try {
-    const response = await fetch(`${API_URL}/auth/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    
-    if (!response.ok) {
-      logout();
-      return null;
-    }
-    
-    const data = await response.json();
-    return data.data;
+    const data: unknown = await apiRequest('/auth/me');
+    return (data as { data?: unknown })?.data || null;
   } catch {
     return null;
   }
 }
-
-// Export auth headers helper для інших API запитів
-export { getAuthHeaders };

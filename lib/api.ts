@@ -1,5 +1,8 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://soul-flowers-api.vercel.app/api';
 
+// Імпорт для клієнтських запитів з токеном
+import { getAuthHeaders } from './api-interceptor';
+
 export interface Product {
   id: string;
   name: string;
@@ -115,4 +118,63 @@ export async function getRelatedProducts(categorySlug: string | null, currentSlu
   });
   const data = await response.json();
   return (data.data || []).filter((p: Product) => p.slug !== currentSlug);
+}
+
+// ==================== CLIENT-SIDE API (з токеном) ====================
+
+export interface Order {
+  id: string;
+  userId: string;
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  total: string;
+  items: OrderItem[];
+  createdAt: string;
+}
+
+export interface OrderItem {
+  productId: string;
+  productName: string;
+  quantity: number;
+  price: string;
+}
+
+// Отримати замовлення користувача (client-side з токеном)
+export async function getUserOrders(): Promise<Order[]> {
+  const data = await fetch(`${API_URL}/orders`, {
+    headers: getAuthHeaders(),
+  }).then((res) => res.json());
+  return data.data || [];
+}
+
+// Отримати одне замовлення
+export async function getOrderById(id: string): Promise<Order | null> {
+  const data = await fetch(`${API_URL}/orders/${id}`, {
+    headers: getAuthHeaders(),
+  }).then((res) => res.json());
+  return data.data || null;
+}
+
+// Створити замовлення
+export async function createOrder(orderData: {
+  items: { productId: string; quantity: number }[];
+  deliveryAddress: string;
+  phone: string;
+}): Promise<Order> {
+  const data = await fetch(`${API_URL}/orders`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+    body: JSON.stringify(orderData),
+  }).then((res) => res.json());
+  return data.data;
+}
+
+// Отримати профіль користувача
+export async function getUserProfile(): Promise<unknown | null> {
+  const data = await fetch(`${API_URL}/auth/me`, {
+    headers: getAuthHeaders(),
+  }).then((res) => res.json());
+  return data.data || null;
 }
