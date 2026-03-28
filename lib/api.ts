@@ -54,14 +54,12 @@ export async function getCategories(): Promise<Category[]> {
 
 export async function getProducts(
   page = 1,
-  limit = 12,
   filter?: string,
   search?: string,
   sort?: string
 ): Promise<PaginationResponse<Product>> {
   const params = new URLSearchParams({
     page: page.toString(),
-    limit: limit.toString(),
   });
   if (filter) params.set('filter', filter);
   if (search) params.set('search', search);
@@ -84,14 +82,12 @@ export async function getCategoryBySlug(slug: string): Promise<CategoryWithProdu
 export async function getCategoryProducts(
   slug: string,
   page = 1,
-  limit = 12,
   filter?: string,
   search?: string,
   sort?: string
 ): Promise<PaginationResponse<Product>> {
   const params = new URLSearchParams({
     page: page.toString(),
-    limit: limit.toString(),
   });
   if (filter) params.set('filter', filter);
   if (search) params.set('search', search);
