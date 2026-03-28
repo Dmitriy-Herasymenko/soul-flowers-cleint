@@ -1,7 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
-import { login as apiLogin, register as apiRegister, logout as apiLogout, getCurrentUser } from '@/lib/auth';
+import { login as apiLogin, register as apiRegister, logout as apiLogout } from '@/lib/auth';
 
 interface User {
   id: string;
@@ -17,7 +17,7 @@ interface AuthState {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
-  checkAuth: () => Promise<void>;
+  checkAuth: () => void;
   isOwner: boolean;
   isAdmin: boolean;
   isCustomer: boolean;
@@ -95,15 +95,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     });
   },
 
-  checkAuth: async () => {
+  checkAuth: () => {
     const token = getStoredToken();
-    if (!token) {
-      set({ isAuthenticated: false, user: null });
-      return;
-    }
-
-    const user = await getCurrentUser();
-    if (user) {
+    const user = getStoredUser();
+    
+    if (token && user) {
       set({
         user,
         isAuthenticated: true,
@@ -112,7 +108,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isCustomer: user.roles?.includes('customer') ?? false,
       });
     } else {
-      set({ isAuthenticated: false, user: null });
+      set({ isAuthenticated: false, user: null, isOwner: false, isAdmin: false, isCustomer: false });
     }
   },
 }));
