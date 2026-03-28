@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/Header";
 import { CartProvider } from "@/components/CartProvider";
-import { AppFooter } from "@/components/AppFooter";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,10 +16,10 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Soul Flowers - Купити квіти з доставкою | Свіжі букети онлайн',
+    default: 'Soul Flowers',
     template: '%s | Soul Flowers',
   },
-  description: 'Широкий вибір свіжих квітів: троянди, тюльпани, орхідеї та авторські букети. Замовляйте онлайн з доставкою по Україні.',
+  description: 'Soul Flowers - інтернет-магазин квітів',
 };
 
 export default function RootLayout({
@@ -37,7 +36,6 @@ export default function RootLayout({
         <CartProvider>
           <Header />
           <main className="flex-1">{children}</main>
-          <AppFooter />
         </CartProvider>
       </body>
     </html>
