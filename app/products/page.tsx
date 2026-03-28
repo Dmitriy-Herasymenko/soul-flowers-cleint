@@ -15,12 +15,12 @@ export const metadata: Metadata = {
 };
 
 interface PageProps {
-  searchParams: Promise<{ page?: string; limit?: string }>;
+  searchParams: Promise<{ page?: string; limit?: string; filter?: string; sort?: string }>;
 }
 
 export default async function ProductsPage({ searchParams }: PageProps) {
-  const { page = '1', limit = '12' } = await searchParams;
-  const productsData = await getProducts(parseInt(page), parseInt(limit));
+  const { page = '1', limit = '12', filter = '', sort = '' } = await searchParams;
+  const productsData = await getProducts(parseInt(page), parseInt(limit), filter, undefined, sort);
   const categories = await getCategories();
 
   return (

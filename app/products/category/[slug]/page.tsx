@@ -6,7 +6,7 @@ import type { Metadata } from 'next';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ page?: string; limit?: string }>;
+  searchParams: Promise<{ page?: string; limit?: string; filter?: string; sort?: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -29,9 +29,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function CategoryPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
-  const { page = '1', limit = '12' } = await searchParams;
+  const { page = '1', limit = '12', filter = '', sort = '' } = await searchParams;
 
-  const productsData = await getCategoryProducts(slug, parseInt(page), parseInt(limit));
+  const productsData = await getCategoryProducts(slug, parseInt(page), parseInt(limit), filter, undefined, sort);
   const categories = await getCategories();
   const currentCategory = categories.find((c) => c.slug === slug);
 

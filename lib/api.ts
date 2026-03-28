@@ -100,7 +100,8 @@ export async function getCategoryProducts(
   page = 1,
   limit = 12,
   filter?: string,
-  search?: string
+  search?: string,
+  sort?: string
 ): Promise<PaginationResponse<Product>> {
   const params = new URLSearchParams({
     page: page.toString(),
@@ -108,6 +109,7 @@ export async function getCategoryProducts(
   });
   if (filter) params.set('filter', filter);
   if (search) params.set('search', search);
+  if (sort) params.set('sort', sort);
 
   const response = await fetch(`${API_URL}/categories/${slug}/pagination?${params}`, {
     next: { revalidate: 60 },

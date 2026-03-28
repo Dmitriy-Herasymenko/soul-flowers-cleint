@@ -1,9 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { useCartStore } from '@/stores/cart-store';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ProductCard } from '@/components/ProductCard';
-import { CategoryCard } from '@/components/CategoryCard';
 import { Pagination } from '@/components/Pagination';
 import { ArrowUpDown, ArrowUpAZ, ArrowDownAZ, Percent } from 'lucide-react';
 
@@ -13,31 +11,21 @@ interface ProductsGridProps {
 }
 
 export function ProductsGrid({ products, pagination }: ProductsGridProps) {
-  const [sort, setSort] = useState<string>('');
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const currentSort = searchParams.get('sort') || '';
 
-  const sortedProducts = useMemo(() => {
-    if (!sort) return products;
-
-    const sorted = [...products];
-    switch (sort) {
-      case 'price_asc':
-        return sorted.sort((a, b) => {
-          const priceA = parseFloat(a.salePrice || a.price);
-          const priceB = parseFloat(b.salePrice || b.price);
-          return priceA - priceB;
-        });
-      case 'price_desc':
-        return sorted.sort((a, b) => {
-          const priceA = parseFloat(a.salePrice || a.price);
-          const priceB = parseFloat(b.salePrice || b.price);
-          return priceB - priceA;
-        });
-      case 'sale':
-        return sorted.filter((p) => p.salePrice && p.salePrice !== p.price);
-      default:
-        return sorted;
+  const handleSort = (newSort: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (newSort) {
+      params.set('sort', newSort);
+    } else {
+      params.delete('sort');
     }
-  }, [products, sort]);
+    params.set('page', '1'); // Скидаємо на першу сторінку при зміні сортування
+    router.push(`${pathname}?${params.toString()}`);
+  };
 
   return (
     <>
@@ -46,14 +34,14 @@ export function ProductsGrid({ products, pagination }: ProductsGridProps) {
         <p className="text-gray-600">
           Показано <span className="font-semibold text-gray-900">{products.length}</span> товарів
         </p>
-        
+
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-600 whitespace-nowrap">Сортувати:</span>
           <div className="flex gap-2">
             <button
-              onClick={() => setSort('')}
+              onClick={() => handleSort('')}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                sort === ''
+                currentSort === ''
                   ? 'bg-pink-500 text-white'
                   : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
               }`}
@@ -62,9 +50,9 @@ export function ProductsGrid({ products, pagination }: ProductsGridProps) {
               <span className="hidden sm:inline">За замовчуванням</span>
             </button>
             <button
-              onClick={() => setSort('price_asc')}
+              onClick={() => handleSort('price_asc')}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                sort === 'price_asc'
+                currentSort === 'price_asc'
                   ? 'bg-pink-500 text-white'
                   : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
               }`}
@@ -73,9 +61,9 @@ export function ProductsGrid({ products, pagination }: ProductsGridProps) {
               <span className="hidden sm:inline">Ціна: низька</span>
             </button>
             <button
-              onClick={() => setSort('price_desc')}
+              onClick={() => handleSort('price_desc')}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                sort === 'price_desc'
+                currentSort === 'price_desc'
                   ? 'bg-pink-500 text-white'
                   : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
               }`}
@@ -84,9 +72,9 @@ export function ProductsGrid({ products, pagination }: ProductsGridProps) {
               <span className="hidden sm:inline">Ціна: висока</span>
             </button>
             <button
-              onClick={() => setSort('sale')}
+              onClick={() => handleSort('sale')}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                sort === 'sale'
+                currentSort === 'sale'
                   ? 'bg-pink-500 text-white'
                   : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
               }`}
@@ -100,7 +88,7 @@ export function ProductsGrid({ products, pagination }: ProductsGridProps) {
 
       {/* Products Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-        {sortedProducts.map((product) => (
+        {products.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
       </div>
