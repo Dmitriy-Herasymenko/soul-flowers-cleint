@@ -2,7 +2,7 @@
 
 import { AuthGuard } from '@/components/auth-guard';
 import { useAuthStore } from '@/stores/auth-store';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { LayoutDashboard, Package, User, CreditCard } from 'lucide-react';
 
@@ -12,9 +12,11 @@ export default function CustomerLayout({
   children: React.ReactNode;
 }) {
   const { isCustomer, isAuthenticated, checkAuth } = useAuthStore();
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     checkAuth();
+    setIsLoaded(true);
   }, []);
 
   const navigation = [
@@ -23,6 +25,17 @@ export default function CustomerLayout({
     { name: 'Оплата', href: '/dashboard/payment', icon: CreditCard },
     { name: 'Профіль', href: '/dashboard/profile', icon: User },
   ];
+
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-pink-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Завантаження...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated || !isCustomer) {
     return null;

@@ -1,11 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/auth-store';
 import { LayoutDashboard, LogOut, User, Package, ShoppingCart, Users, Settings, BarChart3, Menu, X } from 'lucide-react';
-import { useState } from 'react';
 
 export default function DashboardLayout({
   children,
@@ -16,16 +15,18 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const { user, isAuthenticated, logout, isOwner, isAdmin, isCustomer, checkAuth } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     checkAuth();
+    setIsLoaded(true);
   }, []);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (isLoaded && !isAuthenticated) {
       router.push('/auth/login');
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isLoaded, router]);
 
   const handleLogout = () => {
     logout();
@@ -36,12 +37,12 @@ export default function DashboardLayout({
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['owner', 'admin', 'customer'] },
     { name: 'Замовлення', href: '/dashboard/orders', icon: Package, roles: ['owner', 'admin', 'customer'] },
     { name: 'Профіль', href: '/dashboard/profile', icon: User, roles: ['owner', 'admin', 'customer'] },
-    
+
     // Owner only
     { name: 'Користувачі', href: '/dashboard/users', icon: Users, roles: ['owner'] },
     { name: 'Статистика', href: '/dashboard/analytics', icon: BarChart3, roles: ['owner'] },
     { name: 'Налаштування', href: '/dashboard/settings', icon: Settings, roles: ['owner'] },
-    
+
     // Admin only
     { name: 'Продукти', href: '/dashboard/products', icon: ShoppingCart, roles: ['admin'] },
     { name: 'Категорії', href: '/dashboard/categories', icon: Package, roles: ['admin'] },
@@ -59,6 +60,17 @@ export default function DashboardLayout({
   };
 
   const roleBadge = getRoleBadge();
+
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-pink-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Завантаження...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return null;
