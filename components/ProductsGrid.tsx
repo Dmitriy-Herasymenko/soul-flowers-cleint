@@ -1,6 +1,5 @@
 'use client';
 
-import { useMemo } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ProductCard } from '@/components/ProductCard';
 import { Pagination } from '@/components/Pagination';
@@ -28,60 +27,12 @@ export function ProductsGrid({ products, pagination }: ProductsGridProps) {
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  // Сортування на клієнті (API не підтримує sort параметр)
-  const sortedProducts = useMemo(() => {
-    if (!currentSort) return products;
-
-    const sorted = [...products];
-    switch (currentSort) {
-      case 'price_asc':
-        return sorted.sort((a, b) => {
-          const priceA = parseFloat(a.salePrice || a.price);
-          const priceB = parseFloat(b.salePrice || b.price);
-          return priceA - priceB;
-        });
-      case 'price_desc':
-        return sorted.sort((a, b) => {
-          const priceA = parseFloat(a.salePrice || a.price);
-          const priceB = parseFloat(b.salePrice || b.price);
-          return priceB - priceA;
-        });
-      case 'sale':
-        return sorted.filter((p) => p.salePrice && p.salePrice !== p.price);
-      default:
-        return sorted;
-    }
-  }, [products, currentSort]);
-
-  // Перераховуємо pagination для client-side фільтрації
-  const adjustedPagination = useMemo(() => {
-    if (!currentSort || currentSort === 'sale') {
-      const itemsPerPage = pagination.limit || 12;
-      const totalItems = sortedProducts.length;
-      return {
-        ...pagination,
-        total: totalItems,
-        totalPages: Math.ceil(totalItems / itemsPerPage),
-      };
-    }
-    return pagination;
-  }, [sortedProducts, currentSort, pagination]);
-
-  // Пагінація для відфільтрованих товарів
-  const paginatedProducts = useMemo(() => {
-    const currentPage = pagination.page || 1;
-    const itemsPerPage = pagination.limit || 12;
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return sortedProducts.slice(startIndex, endIndex);
-  }, [sortedProducts, pagination.page, pagination.limit]);
-
   return (
     <>
       {/* Sort Controls */}
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <p className="text-gray-600">
-          Показано <span className="font-semibold text-gray-900">{sortedProducts.length}</span> товарів
+          Показано <span className="font-semibold text-gray-900">{products.length}</span> товарів
         </p>
 
         <div className="flex items-center gap-2">
@@ -137,12 +88,12 @@ export function ProductsGrid({ products, pagination }: ProductsGridProps) {
 
       {/* Products Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-        {paginatedProducts.map((product) => (
+        {products.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
       </div>
 
-      <Pagination pagination={adjustedPagination} />
+      <Pagination pagination={pagination} />
     </>
   );
 }

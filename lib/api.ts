@@ -70,21 +70,7 @@ export async function getProducts(
   const response = await fetch(`${API_URL}/products/pagination?${params}`, {
     next: { revalidate: 60 },
   });
-  const data = await response.json();
-  
-  // Фільтруємо тестові продукти
-  const filteredProducts = (data.data || []).filter((p: Product) => 
-    !p.name.startsWith('Test Product') && !p.slug.startsWith('test-product')
-  );
-  
-  return {
-    ...data,
-    data: filteredProducts,
-    pagination: {
-      ...data.pagination,
-      total: filteredProducts.length,
-    },
-  };
+  return response.json();
 }
 
 export async function getCategoryBySlug(slug: string): Promise<CategoryWithProducts | null> {
@@ -127,17 +113,10 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
 
 export async function getRelatedProducts(categorySlug: string | null, currentSlug: string, limit = 5): Promise<Product[]> {
   if (!categorySlug) return [];
-  
+
   const response = await fetch(`${API_URL}/categories/${categorySlug}/pagination?page=1&limit=${limit}`, {
     next: { revalidate: 3600 },
   });
   const data = await response.json();
-  
-  // Фільтруємо тестові продукти
-  return (data.data || [])
-    .filter((p: Product) => 
-      !p.name.startsWith('Test Product') && 
-      !p.slug.startsWith('test-product') &&
-      p.slug !== currentSlug
-    );
+  return (data.data || []).filter((p: Product) => p.slug !== currentSlug);
 }

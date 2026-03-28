@@ -22,7 +22,7 @@ interface PageProps {
 }
 
 export default async function Home({ searchParams }: PageProps) {
-  const { page = '1', limit = '24' } = await searchParams;
+  const { page = '1', limit = '12' } = await searchParams;
   const productsData = await getProducts(parseInt(page), parseInt(limit));
   const categories = await getCategories();
 
