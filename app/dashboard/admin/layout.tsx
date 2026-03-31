@@ -21,7 +21,7 @@ export default function AdminLayout({
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Продукти', href: '/dashboard/admin/products', icon: ShoppingCart },
+    { name: 'Продукти', href: '/dashboard/products', icon: ShoppingCart },
     { name: 'Категорії', href: '/dashboard/admin/categories', icon: Package },
     { name: 'Замовлення', href: '/dashboard/orders', icon: Users },
   ];

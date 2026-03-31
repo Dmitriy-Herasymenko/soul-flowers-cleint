@@ -1,7 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://soul-flowers-api.vercel.app/api';
-
-// Імпорт для клієнтських запитів з токеном
-import { getAuthHeaders } from './api-interceptor';
+import { apiClient } from './api-client';
 
 export interface Product {
   id: string;
@@ -45,14 +42,7 @@ export interface CategoryWithProducts {
 }
 
 export async function getCategories(): Promise<Category[]> {
-  const response = await fetch(`${API_URL}/categories`, {
-    next: { revalidate: 3600 },
-  });
-  const data = await response.json();
-  
-  // Фільтруємо тільки категорії з українськими назвами
-  const validSlugs = ['troiandy', 'tiulpany', 'orkhideyi', 'bukety', 'roslyny'];
-  return (data.data || []).filter((cat: Category) => validSlugs.includes(cat.slug));
+  return apiClient.get<Category[]>('/categories');
 }
 
 export async function getProducts(
@@ -68,18 +58,11 @@ export async function getProducts(
   if (search) params.set('search', search);
   if (sort) params.set('sort', sort);
 
-  const response = await fetch(`${API_URL}/products/pagination?${params}`, {
-    next: { revalidate: 60 },
-  });
-  return response.json();
+  return apiClient.get<PaginationResponse<Product>>(`/products/pagination?${params}`);
 }
 
 export async function getCategoryBySlug(slug: string): Promise<CategoryWithProducts | null> {
-  const response = await fetch(`${API_URL}/categories/${slug}`, {
-    next: { revalidate: 3600 },
-  });
-  const data = await response.json();
-  return data.data || null;
+  return apiClient.get<CategoryWithProducts>(`/categories/${slug}`);
 }
 
 export async function getCategoryProducts(
@@ -96,28 +79,24 @@ export async function getCategoryProducts(
   if (search) params.set('search', search);
   if (sort) params.set('sort', sort);
 
-  const response = await fetch(`${API_URL}/categories/${slug}/pagination?${params}`, {
-    next: { revalidate: 60 },
-  });
-  return response.json();
+  return apiClient.get<PaginationResponse<Product>>(`/categories/${slug}/pagination?${params}`);
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
-  const response = await fetch(`${API_URL}/products/${slug}`, {
-    next: { revalidate: 60 },
-  });
-  const data = await response.json();
-  return data.data || null;
+  return apiClient.get<Product>(`/products/${slug}`);
 }
 
-export async function getRelatedProducts(categorySlug: string | null, currentSlug: string, limit = 5): Promise<Product[]> {
+export async function getRelatedProducts(
+  categorySlug: string | null,
+  currentSlug: string,
+  limit = 5
+): Promise<Product[]> {
   if (!categorySlug) return [];
 
-  const response = await fetch(`${API_URL}/categories/${categorySlug}/pagination?page=1&limit=${limit}`, {
-    next: { revalidate: 3600 },
-  });
-  const data = await response.json();
-  return (data.data || []).filter((p: Product) => p.slug !== currentSlug);
+  const response = await apiClient.get<PaginationResponse<Product>>(
+    `/categories/${categorySlug}/pagination?page=1&limit=${limit}`
+  );
+  return (response.data || []).filter((p: Product) => p.slug !== currentSlug);
 }
 
 // ==================== CLIENT-SIDE API (з токеном) ====================
@@ -138,62 +117,38 @@ export interface OrderItem {
   price: string;
 }
 
-// Отримати замовлення користувача (client-side з токеном)
 export async function getUserOrders(): Promise<Order[]> {
-  const data = await fetch(`${API_URL}/orders`, {
-    headers: getAuthHeaders(),
-  }).then((res) => res.json());
-  return data.data || [];
+  return apiClient.get<Order[]>('/orders', true);
 }
 
-// Отримати одне замовлення
 export async function getOrderById(id: string): Promise<Order | null> {
-  const data = await fetch(`${API_URL}/orders/${id}`, {
-    headers: getAuthHeaders(),
-  }).then((res) => res.json());
-  return data.data || null;
+  return apiClient.get<Order>(`/orders/${id}`, true);
 }
 
-// Створити замовлення
 export async function createOrder(orderData: {
   items: { productId: string; quantity: number }[];
   deliveryAddress: string;
   phone: string;
 }): Promise<Order> {
-  const data = await fetch(`${API_URL}/orders`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeaders(),
-    },
-    body: JSON.stringify(orderData),
-  }).then((res) => res.json());
-  return data.data;
+  return apiClient.post<Order>('/orders', orderData, true);
 }
 
-// Отримати профіль користувача
 export async function getUserProfile(): Promise<unknown | null> {
-  const data = await fetch(`${API_URL}/auth/me`, {
-    headers: getAuthHeaders(),
-  }).then((res) => res.json());
-  return data.data || null;
+  return apiClient.get<unknown>('/auth/me', true);
 }
 
 // ==================== ADMIN PRODUCTS API ====================
 
-// Отримати всі продукти (admin)
-export async function getAllProducts(page = 1, limit = 10): Promise<PaginationResponse<Product>> {
-  const params = new URLSearchParams({
-    page: page.toString(),
-    limit: limit.toString(),
-  });
-  const data = await fetch(`${API_URL}/products/pagination?${params}`, {
-    headers: getAuthHeaders(),
-  }).then((res) => res.json());
-  return data;
+export async function getAllProducts(
+  page = 1,
+  limit = 10
+): Promise<PaginationResponse<Product>> {
+  return apiClient.get<PaginationResponse<Product>>(
+    `/products/pagination?page=${page}&limit=${limit}`,
+    true
+  );
 }
 
-// Створити продукт
 export async function createProduct(productData: {
   name: string;
   slug: string;
@@ -205,18 +160,9 @@ export async function createProduct(productData: {
   cover: string;
   gallery?: string[];
 }): Promise<Product> {
-  const data = await fetch(`${API_URL}/products`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeaders(),
-    },
-    body: JSON.stringify(productData),
-  }).then((res) => res.json());
-  return data.data;
+  return apiClient.post<Product>('/products', productData, true);
 }
 
-// Оновити продукт
 export async function updateProduct(
   id: string,
   productData: Partial<{
@@ -231,21 +177,9 @@ export async function updateProduct(
     gallery: string[];
   }>
 ): Promise<Product> {
-  const data = await fetch(`${API_URL}/products/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeaders(),
-    },
-    body: JSON.stringify(productData),
-  }).then((res) => res.json());
-  return data.data;
+  return apiClient.put<Product>(`/products/${id}`, productData, true);
 }
 
-// Видалити продукт
 export async function deleteProduct(id: string): Promise<void> {
-  await fetch(`${API_URL}/products/${id}`, {
-    method: 'DELETE',
-    headers: getAuthHeaders(),
-  });
+  await apiClient.delete<void>(`/products/${id}`, true);
 }
