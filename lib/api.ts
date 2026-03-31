@@ -178,3 +178,74 @@ export async function getUserProfile(): Promise<unknown | null> {
   }).then((res) => res.json());
   return data.data || null;
 }
+
+// ==================== ADMIN PRODUCTS API ====================
+
+// Отримати всі продукти (admin)
+export async function getAllProducts(page = 1, limit = 10): Promise<PaginationResponse<Product>> {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+  });
+  const data = await fetch(`${API_URL}/products/pagination?${params}`, {
+    headers: getAuthHeaders(),
+  }).then((res) => res.json());
+  return data;
+}
+
+// Створити продукт
+export async function createProduct(productData: {
+  name: string;
+  slug: string;
+  description: string;
+  price: string;
+  salePrice?: string | null;
+  stock: number;
+  categoryId: string;
+  cover: string;
+  gallery?: string[];
+}): Promise<Product> {
+  const data = await fetch(`${API_URL}/products`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+    body: JSON.stringify(productData),
+  }).then((res) => res.json());
+  return data.data;
+}
+
+// Оновити продукт
+export async function updateProduct(
+  id: string,
+  productData: Partial<{
+    name: string;
+    slug: string;
+    description: string;
+    price: string;
+    salePrice: string | null;
+    stock: number;
+    categoryId: string;
+    cover: string;
+    gallery: string[];
+  }>
+): Promise<Product> {
+  const data = await fetch(`${API_URL}/products/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+    body: JSON.stringify(productData),
+  }).then((res) => res.json());
+  return data.data;
+}
+
+// Видалити продукт
+export async function deleteProduct(id: string): Promise<void> {
+  await fetch(`${API_URL}/products/${id}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders(),
+  });
+}
